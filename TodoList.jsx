@@ -7,6 +7,8 @@ export default function TodoList() {
   });
   const [input, setInput] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [priority, setPriority] = useState('medium');
+  const [searchTerm, setSearchTerm] = useState('');
   const [editIndex, setEditIndex] = useState(null);
   const [filter, setFilter] = useState('all');
 
@@ -19,16 +21,17 @@ export default function TodoList() {
 
     if (editIndex !== null) {
       const updatedTodos = todos.map((todo, index) =>
-        index === editIndex ? { ...todo, text: input, dueDate } : todo
+        index === editIndex ? { ...todo, text: input, dueDate, priority } : todo
       );
       setTodos(updatedTodos);
       setEditIndex(null);
     } else {
-      setTodos([...todos, { text: input, completed: false, dueDate }]);
+      setTodos([...todos, { text: input, completed: false, dueDate, priority }]);
     }
 
     setInput('');
     setDueDate('');
+    setPriority('medium');
   };
 
   const toggleComplete = (index) => {
@@ -41,6 +44,7 @@ export default function TodoList() {
   const editTodo = (index) => {
     setInput(todos[index].text);
     setDueDate(todos[index].dueDate || '');
+    setPriority(todos[index].priority || 'medium');
     setEditIndex(index);
   };
 
@@ -53,15 +57,40 @@ export default function TodoList() {
   };
 
   const activeCount = todos.filter((todo) => !todo.completed).length;
-  const filteredTodos = todos.filter((todo) => {
-    if (filter === 'completed') return todo.completed;
-    if (filter === 'active') return !todo.completed;
-    return true;
+  const filteredTodos = todos
+    .filter((todo) => {
+      if (filter === 'completed') return todo.completed;
+      if (filter === 'active') return !todo.completed;
+      return true;
+    })
+    .filter((todo) =>
+      todo.text.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+  const priorityOrder = { high: 0, medium: 1, low: 2 };
+  const sortedTodos = [...filteredTodos].sort((a, b) => {
+    const diff =
+      (priorityOrder[a.priority] ?? 3) - (priorityOrder[b.priority] ?? 3);
+    if (diff !== 0) return diff;
+    if (a.dueDate && b.dueDate) {
+      return new Date(a.dueDate) - new Date(b.dueDate);
+    }
+    return 0;
   });
 
   return (
     <div className="max-w-md mx-auto mt-10 p-4 bg-white rounded shadow">
       <h1 className="text-xl font-bold mb-4">My Todo List</h1>
+
+      <div className="mb-4">
+        <input
+          type="text"
+          className="w-full border p-2 rounded"
+          placeholder="Search..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
 
       <div className="flex mb-4">
         <input
@@ -77,6 +106,15 @@ export default function TodoList() {
           value={dueDate}
           onChange={(e) => setDueDate(e.target.value)}
         />
+        <select
+          className="border p-2 mr-2 rounded"
+          value={priority}
+          onChange={(e) => setPriority(e.target.value)}
+        >
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
         <button onClick={addTodo} className="bg-blue-500 text-white p-2 rounded">
           {editIndex !== null ? 'Update' : 'Add'}
         </button>
@@ -109,7 +147,7 @@ export default function TodoList() {
       </div>
 
       <ul className="list-disc pl-5">
-        {filteredTodos.map((todo, index) => (
+        {sortedTodos.map((todo, index) => (
           <li key={index} className="flex items-center justify-between mb-2">
             <div className="flex flex-col" onClick={() => toggleComplete(index)}>
               <span
@@ -117,9 +155,24 @@ export default function TodoList() {
               >
                 {todo.text}
               </span>
-              {todo.dueDate && (
-                <span className="text-xs text-gray-500">{todo.dueDate}</span>
-              )}
+              <div className="flex space-x-2">
+                {todo.dueDate && (
+                  <span className="text-xs text-gray-500">{todo.dueDate}</span>
+                )}
+                {todo.priority && (
+                  <span
+                    className={`text-xs ${
+                      todo.priority === 'high'
+                        ? 'text-red-500'
+                        : todo.priority === 'medium'
+                        ? 'text-yellow-500'
+                        : 'text-green-500'
+                    }`}
+                  >
+                    {todo.priority}
+                  </span>
+                )}
+              </div>
             </div>
             <div>
               <button onClick={() => editTodo(index)} className="text-sm text-green-500 mr-2">
