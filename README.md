@@ -4,12 +4,14 @@ This is a simple Todo List application built with React. It uses local storage t
 
 ## Features
 
-- Add tasks with optional due dates
+- Add tasks with optional due dates and priority levels
 - Edit, complete or delete tasks
 - Filter tasks by **All**, **Active** or **Completed**
 - Clear all completed tasks
 - Persistent storage in the browser using `localStorage`
 - Displays the number of active tasks remaining
+- Search tasks by text
+- Tasks are automatically sorted by priority and due date
 
 ## Running
 
